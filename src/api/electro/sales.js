@@ -1,0 +1,10 @@
+import api from '../axios';
+export const getSales = (params) => api.get('/electro/sales', { params });
+export const getSale = (id) => api.get(`/electro/sales/${id}`);
+export const createSale = (data) => api.post('/electro/sales', data);
+export const createInvoice = (data) => api.post('/electro/sales/invoice', data);
+export const updateInvoice = (id, data) => api.put(`/electro/sales/${id}`, data);
+export const markInvoicePaid = (id) => api.put(`/electro/sales/${id}/pay`);
+export const cancelSale = (id) => api.put(`/electro/sales/${id}/cancel`);
+export const sendInvoiceEmail = (id, email) => api.post(`/electro/sales/${id}/email`, { email });
+export const getSaleStats = () => api.get('/electro/sales/stats');

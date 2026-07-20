@@ -1,0 +1,254 @@
+import { useState, useEffect } from 'react';
+import {
+  getCustomers,
+  createCustomer,
+  updateCustomer,
+  deleteCustomer,
+  getCustomerStats
+} from '../../api/resto/customers';
+import { Card } from '../../components/ui/Card';
+import { Button } from '../../components/ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Badge } from '../../components/ui/Badge';
+import { Modal } from '../../components/ui/Modal';
+import { Spinner } from '../../components/ui/Spinner';
+import { useNotification } from '../../hooks/useNotification';
+import { useAuth } from '../../hooks/useAuth';
+import { formatCurrency } from '../../utils/format';
+import { Search, Plus, Edit, Trash2, Users, User, Phone, Mail, MapPin, Printer } from 'lucide-react';
+
+export default function Customers() {
+  const { user } = useAuth();
+  const { success, error } = useNotification();
+  const [customers, setCustomers] = useState([]);
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [saving, setSaving] = useState(false);
+  const businessName = user?.businessName || 'My Restaurant';
+
+  const [form, setForm] = useState({
+    name: '',
+    phone: '',
+    email: '',
+    address: '',
+    preferences: ''
+  });
+
+  useEffect(() => {
+    fetchData();
+    fetchStats();
+  }, [search]);
+
+  const fetchData = async () => {
+    setLoading(true);
+    try {
+      const res = await getCustomers({ search });
+      setCustomers(res?.data || []);
+    } catch (err) {
+      error('Failed to load customers');
+    }
+    setLoading(false);
+  };
+
+  const fetchStats = async () => {
+    try {
+      const res = await getCustomerStats();
+      setStats(res?.data);
+    } catch (err) {
+      console.error('Failed to load stats');
+    }
+  };
+
+  const openCreate = () => {
+    setEditing(null);
+    setForm({ name: '', phone: '', email: '', address: '', preferences: '' });
+    setShowModal(true);
+  };
+
+  const openEdit = (customer) => {
+    setEditing(customer);
+    setForm({
+      name: customer.name,
+      phone: customer.phone,
+      email: customer.email || '',
+      address: customer.address || '',
+      preferences: customer.preferences || ''
+    });
+    setShowModal(true);
+  };
+
+  const handleSave = async (e) => {
+    e.preventDefault();
+    setSaving(true);
+    try {
+      if (editing) {
+        await updateCustomer(editing._id, form);
+        success('Customer updated');
+      } else {
+        await createCustomer(form);
+        success('Customer added');
+      }
+      setShowModal(false);
+      fetchData();
+      fetchStats();
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to save');
+    }
+    setSaving(false);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this customer?')) return;
+    try {
+      await deleteCustomer(id);
+      success('Customer deleted');
+      fetchData();
+      fetchStats();
+    } catch (err) {
+      error('Failed to delete');
+    }
+  };
+
+  const handlePrint = () => {
+    const now = new Date().toLocaleString('en-KE');
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Customers - ${businessName}</title>
+          <style>
+            @page { size: A4; margin: 12mm; }
+            body { font-family: Arial, sans-serif; font-size: 11px; color: #1e293b; }
+            .header { text-align: center; border-bottom: 2px solid #f97316; padding-bottom: 10px; margin-bottom: 14px; }
+            .header h2 { color: #f97316; margin: 0; font-size: 22px; }
+            table { width: 100%; border-collapse: collapse; font-size: 10px; }
+            th { background: #f1f5f9; text-align: left; padding: 4px 6px; border-bottom: 1px solid #e2e8f0; }
+            td { padding: 4px 6px; border-bottom: 1px solid #f1f5f9; }
+            .text-right { text-align: right; }
+            .footer { text-align: center; margin-top: 16px; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 10px; }
+          </style>
+        </head>
+        <body>
+          <div class="header"><h2>${businessName}</h2><p>Customer List</p><p>${now}</p></div>
+          <table>
+            <tr><th>Name</th><th>Phone</th><th>Email</th><th>Orders</th><th>Total Spent</th><th>Last Order</th></tr>
+            ${customers.map(c => `
+              <tr>
+                <td>${c.name}</td>
+                <td>${c.phone}</td>
+                <td>${c.email || 'N/A'}</td>
+                <td class="text-right">${c.totalOrders || 0}</td>
+                <td class="text-right">${formatCurrency(c.totalSpent || 0)}</td>
+                <td>${c.lastOrderDate ? new Date(c.lastOrderDate).toLocaleDateString() : 'Never'}</td>
+              </tr>
+            `).join('')}
+          </table>
+          <div class="footer">Generated by RestoManagerKE — ${now}</div>
+        </body>
+      </html>
+    `;
+    const win = window.open('', '_blank', 'width=900,height=700');
+    win.document.write(html);
+    win.document.close();
+    setTimeout(() => win.print(), 500);
+  };
+
+  if (loading) {
+    return <div className="flex justify-center py-10"><Spinner size="lg" /></div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Customers</h1>
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={handlePrint}><Printer size={18} /> Print</Button>
+          <Button onClick={openCreate}><Plus size={18} /> Add Customer</Button>
+        </div>
+      </div>
+
+      {/* Stats */}
+      {stats && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <Card className="text-center"><Users size={20} className="mx-auto text-primary-500 mb-2" /><p className="text-2xl font-bold">{stats.total || 0}</p><p className="text-xs text-gray-500">Total Customers</p></Card>
+          <Card className="text-center"><User size={20} className="mx-auto text-green-500 mb-2" /><p className="text-2xl font-bold">{stats.active || 0}</p><p className="text-xs text-gray-500">Active</p></Card>
+          <Card className="text-center"><Phone size={20} className="mx-auto text-blue-500 mb-2" /><p className="text-2xl font-bold">{stats.newToday || 0}</p><p className="text-xs text-gray-500">New Today</p></Card>
+          <Card className="text-center"><User size={20} className="mx-auto text-purple-500 mb-2" /><p className="text-2xl font-bold">{stats.topSpenders?.length || 0}</p><p className="text-xs text-gray-500">Top Spenders</p></Card>
+        </div>
+      )}
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <Input placeholder="Search customers..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-10" />
+      </div>
+
+      {/* Customers Table */}
+      {customers.length === 0 ? (
+        <Card className="text-center py-12">
+          <Users size={48} className="mx-auto text-gray-300 dark:text-gray-600 mb-4" />
+          <h3 className="text-lg font-medium text-gray-900 dark:text-white">No customers</h3>
+          <Button onClick={openCreate} className="mt-4"><Plus size={18} /> Add Customer</Button>
+        </Card>
+      ) : (
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50 dark:bg-gray-800">
+              <tr>
+                <th className="px-4 py-3 text-left">Name</th>
+                <th className="px-4 py-3 text-left">Phone</th>
+                <th className="px-4 py-3 text-left">Email</th>
+                <th className="px-4 py-3 text-right">Orders</th>
+                <th className="px-4 py-3 text-right">Total Spent</th>
+                <th className="px-4 py-3 text-left">Last Order</th>
+                <th className="px-4 py-3 text-center">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {customers.map((customer) => (
+                <tr key={customer._id} className="border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800">
+                  <td className="px-4 py-3 font-medium">{customer.name}</td>
+                  <td className="px-4 py-3">{customer.phone}</td>
+                  <td className="px-4 py-3">{customer.email || 'N/A'}</td>
+                  <td className="px-4 py-3 text-right">{customer.totalOrders || 0}</td>
+                  <td className="px-4 py-3 text-right font-medium">{formatCurrency(customer.totalSpent || 0)}</td>
+                  <td className="px-4 py-3 text-xs text-gray-500">
+                    {customer.lastOrderDate ? new Date(customer.lastOrderDate).toLocaleDateString() : 'Never'}
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <div className="flex gap-1 justify-center">
+                      <button onClick={() => openEdit(customer)} className="p-1.5 rounded hover:bg-gray-100" title="Edit">
+                        <Edit size={16} className="text-blue-500" />
+                      </button>
+                      <button onClick={() => handleDelete(customer._id)} className="p-1.5 rounded hover:bg-gray-100" title="Delete">
+                        <Trash2 size={16} className="text-red-500" />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Modal */}
+      <Modal isOpen={showModal} onClose={() => setShowModal(false)} title={editing ? 'Edit Customer' : 'Add Customer'} size="md">
+        <form onSubmit={handleSave} className="space-y-4">
+          <Input label="Name *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required />
+          <Input label="Phone *" value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })} required />
+          <Input label="Email" type="email" value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} />
+          <Input label="Address" value={form.address} onChange={(e) => setForm({ ...form, address: e.target.value })} />
+          <Input label="Preferences" value={form.preferences} onChange={(e) => setForm({ ...form, preferences: e.target.value })} placeholder="Dietary preferences, favorites..." />
+          <div className="flex justify-end gap-3 pt-2">
+            <Button variant="secondary" type="button" onClick={() => setShowModal(false)}>Cancel</Button>
+            <Button type="submit" loading={saving}>{editing ? 'Update' : 'Add'} Customer</Button>
+          </div>
+        </form>
+      </Modal>
+    </div>
+  );
+}
