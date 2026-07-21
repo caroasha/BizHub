@@ -22,12 +22,15 @@ import Maintenance from '../pages/public/Maintenance';
 export default function PublicApp() {
   return (
     <Routes>
+      {/* Auth pages - NO layout */}
+      <Route path="login" element={<Login />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="reset-password" element={<ResetPassword />} />
+
+      {/* All other pages WITH layout */}
       <Route element={<PublicLayout />}>
         <Route index element={<Home />} />
         <Route path="register" element={<Register />} />
-        <Route path="login" element={<Login />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="reset-password" element={<ResetPassword />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="renewal" element={<Renewal />} />

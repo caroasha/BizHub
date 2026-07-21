@@ -8,6 +8,7 @@ import { CheckIcon } from '../../utils/svg';
 import { useSite } from '../../hooks/useSite';
 import { getPlans } from '../../api/public/plans';
 import { formatCurrency, formatStorage, formatUsers } from '../../utils/format';
+import api from '../../api/axios';
 
 const modules = [
   { icon: '🍽️', name: 'RestoManagerKE', desc: 'Restaurant POS, menu, tables, kitchen', slug: 'resto' },
@@ -37,13 +38,17 @@ export default function Home() {
   const { settings, testimonials, faqs } = useSite();
   const [plans, setPlans] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [downloads, setDownloads] = useState({});
   const navigate = useNavigate();
 
   useEffect(() => {
-    getPlans()
-      .then(res => setPlans(res?.data || res || []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      getPlans(),
+      api.get('/public/downloads'),
+    ]).then(([plansRes, downloadsRes]) => {
+      setPlans(plansRes?.data || []);
+      setDownloads(downloadsRes?.data || {});
+    }).catch(() => {}).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
@@ -53,6 +58,10 @@ export default function Home() {
       </div>
     );
   }
+
+  const showDesktop = downloads.desktop_app_enabled === 'true';
+  const showAndroid = downloads.android_app_enabled === 'true';
+  const showDownloads = showDesktop || showAndroid;
 
   return (
     <>
@@ -66,18 +75,12 @@ export default function Home() {
             Restaurant, pharmacy, property, electronics, and cyber café — all in one powerful platform.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link to="/pricing">
-              <Button size="lg">Start Free Trial</Button>
-            </Link>
-            <Link to="/login">
-              <Button variant="outline" size="lg">Login</Button>
-            </Link>
+            <Link to="/pricing"><Button size="lg">Start Free Trial</Button></Link>
+            <Link to="/login"><Button variant="outline" size="lg">Login</Button></Link>
           </div>
           <div className="mt-10 flex flex-wrap justify-center gap-2">
             {['Restaurant', 'Pharmacy', 'Rentals', 'Electronics', 'Cyber Café'].map(tag => (
-              <span key={tag} className="px-4 py-1.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-200 text-sm font-medium">
-                {tag}
-              </span>
+              <span key={tag} className="px-4 py-1.5 rounded-full bg-primary-100 dark:bg-primary-900 text-primary-700 dark:text-primary-200 text-sm font-medium">{tag}</span>
             ))}
           </div>
           <p className="mt-6 text-sm text-gray-400 dark:text-gray-500">14-day free trial • No credit card required</p>
@@ -133,9 +136,7 @@ export default function Home() {
                   <h3 className="text-lg font-bold text-gray-900 dark:text-white">{plan.name}</h3>
                   <span className="text-xs text-gray-500 dark:text-gray-400 capitalize">{plan.cycle}</span>
                   <div className="mt-3">
-                    <span className="text-4xl font-extrabold text-gray-900 dark:text-white">
-                      {plan.price === 0 ? 'Free' : formatCurrency(plan.price)}
-                    </span>
+                    <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{plan.price === 0 ? 'Free' : formatCurrency(plan.price)}</span>
                     {plan.cycle !== 'trial' && plan.cycle !== 'permanent' && (
                       <span className="text-sm text-gray-400 dark:text-gray-500">/{plan.cycle === 'yearly' ? 'yr' : 'mo'}</span>
                     )}
@@ -150,11 +151,7 @@ export default function Home() {
                   <p className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-400 dark:text-gray-500">
                     {formatUsers(plan.maxUsers)} Users • {formatStorage(plan.maxStorageMB)}
                   </p>
-                  <Button
-                    variant={plan.highlighted ? 'primary' : 'outline'}
-                    className="mt-4 w-full"
-                    onClick={() => navigate(`/register?plan=${plan.slug}`)}
-                  >
+                  <Button variant={plan.highlighted ? 'primary' : 'outline'} className="mt-4 w-full" onClick={() => navigate(`/register?plan=${plan.slug}`)}>
                     {plan.cycle === 'trial' ? 'Start Free Trial' : 'Get Started'}
                   </Button>
                 </div>
@@ -167,23 +164,42 @@ export default function Home() {
         </section>
       )}
 
+      {/* DOWNLOADS */}
+      {showDownloads && (
+        <section id="downloads-section" className="py-16 bg-gray-50 dark:bg-gray-900">
+          <div className="max-w-4xl mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">Download BizHub</h2>
+            <p className="text-gray-500 dark:text-gray-400 mb-8">Available on your favorite platforms</p>
+            <div className="flex flex-wrap justify-center gap-4">
+              {showDesktop && (
+                <a href={downloads.desktop_app_url || '#'} target="_blank" rel="noopener noreferrer"
+                  className="px-8 py-4 bg-primary-600 hover:bg-primary-700 text-white font-semibold rounded-lg shadow-md transition-colors flex items-center gap-2">
+                  🖥️ {downloads.desktop_app_label || 'Download for Desktop'}
+                </a>
+              )}
+              {showAndroid && (
+                <a href={downloads.android_app_url || '#'} target="_blank" rel="noopener noreferrer"
+                  className="px-8 py-4 border-2 border-primary-600 text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 font-semibold rounded-lg transition-colors flex items-center gap-2">
+                  📱 {downloads.android_app_label || 'Get on Android'}
+                </a>
+              )}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* TESTIMONIALS */}
       {testimonials?.length > 0 && (
-        <section className="py-16 bg-gray-50 dark:bg-gray-900">
+        <section className="py-16 bg-white dark:bg-gray-800">
           <div className="max-w-6xl mx-auto px-4">
             <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">What Our Customers Say</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {testimonials.slice(0, 3).map((t, i) => (
-                <div key={i} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
+                <div key={i} className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl p-6">
                   <p className="text-sm text-gray-600 dark:text-gray-400 italic">"{t.content || t.quote}"</p>
                   <div className="mt-4 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">
-                      {(t.name || 'U')[0]}
-                    </div>
-                    <div>
-                      <p className="font-medium text-gray-900 dark:text-white text-sm">{t.name}</p>
-                      <p className="text-xs text-gray-400 dark:text-gray-500">{t.role || t.business}</p>
-                    </div>
+                    <div className="w-10 h-10 rounded-full bg-primary-500 flex items-center justify-center text-white font-bold text-sm">{(t.name || 'U')[0]}</div>
+                    <div><p className="font-medium text-gray-900 dark:text-white text-sm">{t.name}</p><p className="text-xs text-gray-400 dark:text-gray-500">{t.role || t.business}</p></div>
                   </div>
                 </div>
               ))}
@@ -193,7 +209,7 @@ export default function Home() {
       )}
 
       {/* FAQ */}
-      <section className="py-16 bg-white dark:bg-gray-800">
+      <section className="py-16 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-3xl mx-auto px-4">
           <h2 className="text-3xl font-bold text-center text-gray-900 dark:text-white mb-12">Frequently Asked Questions</h2>
           <Accordion items={faqs?.length > 0 ? faqs.map(f => ({ title: f.title, content: f.content })) : defaultFaqs} />
@@ -209,12 +225,8 @@ export default function Home() {
           <h2 className="text-3xl font-bold text-white">Ready to Transform Your Business?</h2>
           <p className="mt-3 text-white/80 text-lg">Join hundreds of businesses using BizHub.</p>
           <div className="mt-8 flex flex-wrap justify-center gap-4">
-            <Link to="/pricing">
-              <Button size="lg" className="bg-white text-primary-600 hover:bg-white/90">Start Free Trial</Button>
-            </Link>
-            <Link to="/contact">
-              <Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">Contact Sales</Button>
-            </Link>
+            <Link to="/pricing"><Button size="lg" className="bg-white text-primary-600 hover:bg-white/90">Start Free Trial</Button></Link>
+            <Link to="/contact"><Button variant="outline" size="lg" className="border-white text-white hover:bg-white/10">Contact Sales</Button></Link>
           </div>
         </div>
       </section>

@@ -53,9 +53,17 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
+          <div className="flex justify-center mb-4">
+            <svg className="w-12 h-12 text-primary-600" viewBox="0 0 32 32" fill="none">
+              <rect width="32" height="32" rx="8" fill="currentColor" />
+              <path d="M8 10h6v12H8zm10-4h6v16h-6z" fill="white" />
+              <circle cx="22" cy="8" r="2" fill="white" fillOpacity="0.5" />
+              <circle cx="22" cy="20" r="2" fill="white" fillOpacity="0.5" />
+            </svg>
+          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">Login to your BizHub account</p>
         </div>
@@ -71,11 +79,11 @@ export default function Login() {
           </form>
         </Card>
         <p className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
-          Don't have an account? <Link to="/pricing" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">Get Started</Link>
+          Don't have an account?{' '}
+          <Link to="/pricing" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">Get Started</Link>
         </p>
       </div>
 
-      {/* Module Selector Overlay */}
       {showSelector && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
