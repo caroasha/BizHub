@@ -1,0 +1,33 @@
+{
+  "name": "BizHub - Universal Business Management Suite",
+  "short_name": "BizHub",
+  "description": "Manage your restaurant, pharmacy, rentals, electronics shop, and cyber café from one platform.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#1a73e8",
+  "orientation": "portrait-primary",
+  "author": "Davis Okoth",
+  "developer": {
+    "name": "Davis Okoth",
+    "url": "https://bizhub.pxxl.click"
+  },
+  "icons": [
+    {
+      "src": "/pwa-icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-icons/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}

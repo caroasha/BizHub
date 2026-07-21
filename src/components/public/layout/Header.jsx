@@ -6,8 +6,11 @@ import { Sun, Moon, Menu, X, ChevronDown } from 'lucide-react';
 import { Button } from '../../ui/Button';
 
 const moduleRoutes = {
-  restaurant: '/resto', pharmacy: '/pharma', apartment: '/apartment',
-  electronics: '/electro', cyber: '/cyber',
+  restaurant: '/resto',
+  pharmacy: '/pharma',
+  apartment: '/apartment',
+  electronics: '/electro',
+  cyber: '/cyber',
 };
 
 const Header = () => {
@@ -19,7 +22,9 @@ const Header = () => {
   const location = useLocation();
 
   const goHome = () => {
-    if (location.pathname !== '/') navigate('/');
+    if (location.pathname !== '/') {
+      navigate('/');
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
     setMobileOpen(false);
   };
@@ -39,6 +44,8 @@ const Header = () => {
   };
 
   const getDashboardRoute = () => {
+    const tenantType = user?.tenantId ? null : null;
+    // Default based on user's stored tenant
     return moduleRoutes[user?.businessType] || '/resto';
   };
 
@@ -61,7 +68,6 @@ const Header = () => {
             <button onClick={() => scrollTo('modules-section')} className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Modules</button>
             <button onClick={() => scrollTo('highlights-section')} className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Features</button>
             <button onClick={() => scrollTo('pricing-section')} className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 transition-colors">Pricing</button>
-            <button onClick={() => scrollTo('downloads-section')} className="text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">Downloads</button>
 
             <div className="relative" onMouseEnter={() => setSupportOpen(true)} onMouseLeave={() => setSupportOpen(false)}>
               <button className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-300 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
@@ -104,7 +110,6 @@ const Header = () => {
           <button onClick={() => scrollTo('modules-section')} className="block w-full text-left py-2.5 text-sm text-gray-700 dark:text-gray-300">Modules</button>
           <button onClick={() => scrollTo('highlights-section')} className="block w-full text-left py-2.5 text-sm text-gray-700 dark:text-gray-300">Features</button>
           <button onClick={() => scrollTo('pricing-section')} className="block w-full text-left py-2.5 text-sm font-medium text-primary-600 dark:text-primary-400">Pricing</button>
-          <button onClick={() => scrollTo('downloads-section')} className="block w-full text-left py-2.5 text-sm text-gray-700 dark:text-gray-300">Downloads</button>
           <hr className="border-gray-200 dark:border-gray-700 my-1" />
           <button onClick={() => { navigate('/contact'); setMobileOpen(false); }} className="block w-full text-left py-2.5 text-sm text-gray-700 dark:text-gray-300">Contact</button>
           <button onClick={() => { navigate('/faq'); setMobileOpen(false); }} className="block w-full text-left py-2.5 text-sm text-gray-700 dark:text-gray-300">FAQs</button>

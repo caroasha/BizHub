@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
+import { MODULES } from '../../utils/constants';
 
 const moduleRoutes = {
   restaurant: '/resto', pharmacy: '/pharma', apartment: '/apartment',
@@ -18,6 +19,8 @@ export default function Login() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const [showSelector, setShowSelector] = useState(false);
+  const [userModules, setUserModules] = useState([]);
   const { register, handleSubmit, formState: { errors } } = useForm();
 
   const onSubmit = async (data) => {
@@ -25,8 +28,17 @@ export default function Login() {
     setLoading(true);
     try {
       const result = await login(data.email, data.password);
+      const modules = result?.modules || [];
       const businessType = result?.tenant?.businessType;
-      navigate(moduleRoutes[businessType] || '/resto');
+
+      if (modules.length > 1) {
+        setUserModules(modules);
+        setShowSelector(true);
+      } else if (businessType) {
+        navigate(moduleRoutes[businessType] || '/resto');
+      } else {
+        navigate('/resto');
+      }
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Login failed';
       setLoginError(msg);
@@ -35,18 +47,15 @@ export default function Login() {
     setLoading(false);
   };
 
+  const handleModuleSelect = (mod) => {
+    setShowSelector(false);
+    navigate(moduleRoutes[mod] || '/resto');
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <svg className="w-12 h-12 text-primary-600" viewBox="0 0 32 32" fill="none">
-              <rect width="32" height="32" rx="8" fill="currentColor" />
-              <path d="M8 10h6v12H8zm10-4h6v16h-6z" fill="white" />
-              <circle cx="22" cy="8" r="2" fill="white" fillOpacity="0.5" />
-              <circle cx="22" cy="20" r="2" fill="white" fillOpacity="0.5" />
-            </svg>
-          </div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
           <p className="text-gray-500 dark:text-gray-400 mt-2">Login to your BizHub account</p>
         </div>
@@ -62,10 +71,32 @@ export default function Login() {
           </form>
         </Card>
         <p className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
-          Don't have an account?{' '}
-          <Link to="/pricing" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">Get Started</Link>
+          Don't have an account? <Link to="/pricing" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">Get Started</Link>
         </p>
       </div>
+
+      {/* Module Selector Overlay */}
+      {showSelector && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-2">Choose Module</h2>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">You have access to multiple modules. Select one to continue.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {userModules.map(mod => {
+                const config = MODULES.find(m => m.type === mod);
+                return (
+                  <div key={mod} onClick={() => handleModuleSelect(mod)}
+                    className="p-4 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl text-center cursor-pointer hover:shadow-md hover:border-primary-500 transition-all">
+                    <span className="text-3xl">{config?.icon || '📦'}</span>
+                    <p className="mt-2 font-medium text-gray-900 dark:text-white text-sm">{config?.name || mod}</p>
+                  </div>
+                );
+              })}
+            </div>
+            <Button variant="secondary" className="mt-4 w-full" onClick={() => { setShowSelector(false); navigate('/resto'); }}>Go to Default</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
