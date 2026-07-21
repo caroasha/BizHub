@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
 import { PublicLayout } from '../components/public/layout/PublicLayout';
 import Home from '../pages/public/Home';
 import Register from '../pages/public/Register';
@@ -19,19 +19,28 @@ import Refund from '../pages/public/Refund';
 import NotFound from '../pages/public/NotFound';
 import Maintenance from '../pages/public/Maintenance';
 
-export default function PublicApp() {
-  const isDesktop = new URLSearchParams(window.location.search).get('desktop') === 'true';
+function LayoutWrapper() {
+  const location = useLocation();
+  const isDesktopLogin = location.pathname === '/login' && new URLSearchParams(location.search).get('desktop') === 'true';
+
+  if (isDesktopLogin) {
+    return <Outlet />;
+  }
 
   return (
-    <Routes>
-      {/* Desktop login - no layout */}
-      {isDesktop && <Route path="login" element={<Login />} />}
+    <PublicLayout>
+      <Outlet />
+    </PublicLayout>
+  );
+}
 
-      {/* Normal routes with layout */}
-      <Route element={isDesktop ? <>{<Outlet />}</> : <PublicLayout />}>
+export default function PublicApp() {
+  return (
+    <Routes>
+      <Route element={<LayoutWrapper />}>
         <Route index element={<Home />} />
-        <Route path="register" element={<Register />} />
         <Route path="login" element={<Login />} />
+        <Route path="register" element={<Register />} />
         <Route path="forgot-password" element={<ForgotPassword />} />
         <Route path="reset-password" element={<ResetPassword />} />
         <Route path="pricing" element={<Pricing />} />
