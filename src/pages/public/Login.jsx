@@ -61,6 +61,10 @@ export default function Login() {
             <Button type="submit" loading={loading} className="w-full">Login</Button>
           </form>
         </Card>
+        <p className="text-center mt-6 text-sm text-gray-500 dark:text-gray-400">
+          Don't have an account?{' '}
+          <Link to="/pricing" className="text-primary-600 dark:text-primary-400 font-medium hover:underline">Get Started</Link>
+        </p>
       </div>
     </div>
   );
