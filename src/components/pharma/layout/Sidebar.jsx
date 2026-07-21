@@ -2,7 +2,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useSidebar } from '../../../hooks/useSidebar';
 import { useAuth } from '../../../hooks/useAuth';
 import { cn } from '../../../utils/cn';
-import { X, LayoutDashboard, Pill, ShoppingCart, FileText, Truck, BarChart3, Settings } from 'lucide-react';
+import { X, LayoutDashboard, Pill, ShoppingCart, FileText, Truck, BarChart3, Settings, DollarSign, Bot } from 'lucide-react';
 
 const links = [
   { key: 'dashboard', path: '/pharma', icon: LayoutDashboard, label: 'Dashboard' },
@@ -11,6 +11,8 @@ const links = [
   { key: 'prescriptions', path: '/pharma/prescriptions', icon: FileText, label: 'Prescriptions' },
   { key: 'suppliers', path: '/pharma/suppliers', icon: Truck, label: 'Suppliers' },
   { key: 'reports', path: '/pharma/reports', icon: BarChart3, label: 'Reports' },
+  { key: 'accounts', path: '/pharma/accounts', icon: DollarSign, label: 'Accounts' },
+{ key: 'ai', path: '/pharma/ai', icon: Bot, label: 'AI Assistant' },
   { key: 'settings', path: '/pharma/settings', icon: Settings, label: 'Settings' },
 ];
 
