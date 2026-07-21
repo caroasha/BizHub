@@ -1,4 +1,4 @@
-import { Routes, Route, Outlet, useLocation } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { PublicLayout } from '../components/public/layout/PublicLayout';
 import Home from '../pages/public/Home';
 import Register from '../pages/public/Register';
@@ -19,30 +19,18 @@ import Refund from '../pages/public/Refund';
 import NotFound from '../pages/public/NotFound';
 import Maintenance from '../pages/public/Maintenance';
 
-function LayoutWrapper() {
-  const location = useLocation();
-  const isDesktopLogin = location.pathname === '/login' && new URLSearchParams(location.search).get('desktop') === 'true';
-
-  if (isDesktopLogin) {
-    return <Outlet />;
-  }
-
-  return (
-    <PublicLayout>
-      <Outlet />
-    </PublicLayout>
-  );
-}
-
 export default function PublicApp() {
   return (
     <Routes>
-      <Route element={<LayoutWrapper />}>
+      {/* Login + Forgot + Reset - NO layout */}
+      <Route path="login" element={<Login />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="reset-password" element={<ResetPassword />} />
+
+      {/* Everything else WITH layout */}
+      <Route element={<PublicLayout />}>
         <Route index element={<Home />} />
-        <Route path="login" element={<Login />} />
         <Route path="register" element={<Register />} />
-        <Route path="forgot-password" element={<ForgotPassword />} />
-        <Route path="reset-password" element={<ResetPassword />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="checkout" element={<Checkout />} />
         <Route path="renewal" element={<Renewal />} />
