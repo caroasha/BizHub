@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Card } from '../../components/ui/Card';
@@ -20,8 +20,11 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const { register, handleSubmit, formState: { errors } } = useForm();
+  const [isDesktop, setIsDesktop] = useState(false);
 
-  const isDesktop = new URLSearchParams(window.location.search).get('desktop') === 'true';
+  useEffect(() => {
+    setIsDesktop(new URLSearchParams(window.location.search).get('desktop') === 'true');
+  }, []);
 
   const onSubmit = async (data) => {
     setLoginError('');
@@ -29,11 +32,7 @@ export default function Login() {
     try {
       const result = await login(data.email, data.password);
       const businessType = result?.tenant?.businessType;
-      if (businessType) {
-        navigate(moduleRoutes[businessType] || '/resto');
-      } else {
-        navigate('/resto');
-      }
+      navigate(moduleRoutes[businessType] || '/resto');
     } catch (err) {
       const msg = err.response?.data?.message || err.message || 'Login failed';
       setLoginError(msg);
@@ -58,30 +57,33 @@ export default function Login() {
     </Card>
   );
 
-  // Desktop: clean fullscreen login
+  // Desktop: fullscreen overlay that covers PublicLayout
   if (isDesktop) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
-        <div className="w-full max-w-md">
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <svg className="w-12 h-12 text-primary-600" viewBox="0 0 32 32" fill="none">
-                <rect width="32" height="32" rx="8" fill="currentColor" />
-                <path d="M8 10h6v12H8zm10-4h6v16h-6z" fill="white" />
-                <circle cx="22" cy="8" r="2" fill="white" fillOpacity="0.5" />
-                <circle cx="22" cy="20" r="2" fill="white" fillOpacity="0.5" />
-              </svg>
+      <>
+        {/* Hide the public layout behind us */}
+        <style>{`nav, footer, header { display: none !important; }`}</style>
+        <div className="fixed inset-0 z-50 bg-gray-50 dark:bg-gray-950 flex items-center justify-center px-4">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-8">
+              <div className="flex justify-center mb-4">
+                <svg className="w-12 h-12 text-primary-600" viewBox="0 0 32 32" fill="none">
+                  <rect width="32" height="32" rx="8" fill="currentColor" />
+                  <path d="M8 10h6v12H8zm10-4h6v16h-6z" fill="white" />
+                  <circle cx="22" cy="8" r="2" fill="white" fillOpacity="0.5" />
+                  <circle cx="22" cy="20" r="2" fill="white" fillOpacity="0.5" />
+                </svg>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-2">Login to your BizHub account</p>
             </div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Welcome Back</h1>
-            <p className="text-gray-500 dark:text-gray-400 mt-2">Login to your BizHub account</p>
+            {formContent}
           </div>
-          {formContent}
         </div>
-      </div>
+      </>
     );
   }
 
-  // Web: normal layout
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-16">
       <div className="w-full max-w-md">
