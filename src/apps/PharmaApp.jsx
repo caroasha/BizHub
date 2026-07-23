@@ -18,7 +18,7 @@ export default function PharmaApp() {
         <Route element={<PharmaLayout />}>
           <Route index element={<Dashboard />} />
           <Route path="inventory" element={<Inventory />} />
-          <Route path="sales" element={<Sales />} />
+          <Route path="pos" element={<Sales />} />
           <Route path="prescriptions" element={<Prescriptions />} />
           <Route path="suppliers" element={<Suppliers />} />
           <Route path="reports" element={<Reports />} />

@@ -13,7 +13,8 @@ import { Spinner } from '../../components/ui/Spinner';
 import { useAuth } from '../../hooks/useAuth';
 import { useNotification } from '../../hooks/useNotification';
 import { formatCurrency, formatDate } from '../../utils/format';
-import { Plus, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, Printer, Search, Filter } from 'lucide-react';
+import { Plus, Edit, Trash2, TrendingUp, TrendingDown, DollarSign, Printer, Search } from 'lucide-react';
+import api from '../../api/axios';
 
 const tabs = [
   { key: 'all', label: 'All' },
@@ -37,7 +38,14 @@ export default function Accounts() {
   const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0]);
   const [endDate, setEndDate] = useState(new Date().toISOString().split('T')[0]);
   const [search, setSearch] = useState('');
-  const businessName = user?.businessName || 'PharmaSys';
+  const [pharmaName, setPharmaName] = useState(user?.businessName || 'PharmaSys');
+
+  useEffect(() => {
+    api.get('/pharma/settings').then(res => {
+      const data = res?.data || res || {};
+      setPharmaName(data?.general?.pharmacyName || user?.businessName || 'PharmaSys');
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => { fetchData(); }, [page, activeTab, startDate, endDate, search]);
 
@@ -75,7 +83,7 @@ export default function Accounts() {
     const now = new Date().toLocaleString('en-KE');
     const html = `<!DOCTYPE html><html><head><title>Transaction</title>
 <style>@page{size:A6;margin:6mm;}body{font-family:Arial;font-size:11px;padding:8px;color:#1e293b;}.hdr{text-align:center;border-bottom:1px dashed #ccc;padding-bottom:6px;margin-bottom:10px;}.hdr h3{margin:0;font-size:14px;color:#059669;}.hdr p{font-size:9px;color:#64748b;margin:2px 0 0;}.row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #f1f5f9;font-size:10px;}.lbl{color:#64748b;}.val{font-weight:600;}.amt{font-size:18px;font-weight:700;text-align:right;padding:8px 0;border-top:2px solid #1e293b;margin-top:4px;}.in{color:#16a34a;}.ex{color:#dc2626;}.ftr{text-align:center;margin-top:12px;font-size:8px;color:#94a3b8;border-top:1px dashed #ccc;padding-top:6px;}</style></head><body>
-<div class="hdr"><h3>${businessName}</h3><p>Transaction Receipt</p></div>
+<div class="hdr"><h3>${pharmaName}</h3><p>Transaction Receipt</p></div>
 <div class="row"><span class="lbl">Date</span><span class="val">${formatDate(row.date)}</span></div>
 <div class="row"><span class="lbl">Type</span><span class="val ${row.type==='income'?'in':'ex'}">${row.type}</span></div>
 <div class="row"><span class="lbl">Category</span><span class="val">${row.category}</span></div>
@@ -92,7 +100,7 @@ export default function Accounts() {
     const rowsHtml = accounts.map(a => `<tr><td>${formatDate(a.date)}</td><td class="${a.type==='income'?'in':'ex'}">${a.type}</td><td class="capitalize">${a.category}</td><td>${a.description||'—'}</td><td class="right bold ${a.type==='income'?'in':'ex'}">${a.type==='income'?'+':'-'}${formatCurrency(a.amount)}</td></tr>`).join('');
     const html = `<!DOCTYPE html><html><head><title>Accounts Report</title>
 <style>@page{size:A4;margin:12mm;}*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Segoe UI',Arial;font-size:10px;color:#1e293b;}.header{text-align:center;margin-bottom:14px;border-bottom:2px solid #059669;padding-bottom:10px;}.header h2{color:#059669;font-size:18px;margin:0;}.header .sub{font-size:9px;color:#64748b;}.meta{display:flex;justify-content:space-between;margin-bottom:10px;font-size:9px;color:#64748b;}.summary{display:flex;gap:12px;margin-bottom:14px;}.card{flex:1;padding:10px;border-radius:6px;text-align:center;border:1px solid #e2e8f0;}.card h3{font-size:16px;margin:0 0 2px;}.card p{font-size:9px;color:#64748b;margin:0;}.green{background:#f0fdf4;border-color:#bbf7d0;}.green h3{color:#16a34a;}.red{background:#fef2f2;border-color:#fecaca;}.red h3{color:#dc2626;}.blue{background:#eff6ff;border-color:#bfdbfe;}.blue h3{color:#1d4ed8;}table{width:100%;border-collapse:collapse;}th{text-align:left;padding:5px 6px;border-bottom:2px solid #059669;font-size:9px;color:#059669;background:#f0fdf4;}td{padding:4px 6px;border-bottom:1px solid #e2e8f0;font-size:9px;}.right{text-align:right;}.bold{font-weight:600;}.capitalize{text-transform:capitalize;}.in{color:#16a34a;}.ex{color:#dc2626;}.footer{text-align:center;margin-top:16px;font-size:8px;color:#94a3b8;border-top:1px solid #e2e8f0;padding-top:10px;}</style></head><body>
-<div class="header"><h2>${businessName}</h2><div class="sub">Accounts Report</div></div>
+<div class="header"><h2>${pharmaName}</h2><div class="sub">Accounts Report</div></div>
 <div class="meta"><span>Period: ${reportDate}</span><span>Printed: ${now}</span></div>
 <div class="summary"><div class="card green"><h3>${formatCurrency(summary.income)}</h3><p>Total Income</p></div><div class="card red"><h3>${formatCurrency(summary.expense)}</h3><p>Total Expenses</p></div><div class="card blue"><h3>${formatCurrency(summary.profit)}</h3><p>Net Profit</p></div></div>
 <table><thead><tr><th>Date</th><th>Type</th><th>Category</th><th>Description</th><th class="right">Amount</th></tr></thead><tbody>${rowsHtml||'<tr><td colspan="5" style="text-align:center;color:#94a3b8;padding:20px;">No entries</td></tr>'}</tbody></table>
